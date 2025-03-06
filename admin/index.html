@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - Управление товарами</title>
+</head>
+<body>
+
+    <h1>Админ панель - Управление товарами</h1>
+
+    <!-- Форма для добавления товара -->
+    <form id="add-product-form">
+        <h2>Добавить товар</h2>
+        <label>Название: <input type="text" id="product-name" required /></label><br>
+        <label>Цена: <input type="number" id="product-price" required /></label><br>
+        <label>Описание: <input type="text" id="product-description" required /></label><br>
+        <label>Категории (через запятую): <input type="text" id="product-categories" required /></label><br>
+        <button type="submit">Добавить товар</button>
+    </form>
+
+    <hr>
+
+    <!-- Форма для редактирования товара -->
+    <form id="edit-product-form">
+        <h2>Редактировать товар</h2>
+        <label>ID товара: <input type="number" id="product-id" required /></label><br>
+        <label>Название: <input type="text" id="edit-product-name" /></label><br>
+        <label>Цена: <input type="number" id="edit-product-price" /></label><br>
+        <label>Описание: <input type="text" id="edit-product-description" /></label><br>
+        <label>Категории (через запятую): <input type="text" id="edit-product-categories" /></label><br>
+        <button type="submit">Редактировать товар</button>
+    </form>
+
+    <hr>
+
+    <!-- Форма для удаления товара -->
+    <form id="delete-product-form">
+        <h2>Удалить товар</h2>
+        <label>ID товара: <input type="number" id="delete-product-id" required /></label><br>
+        <button type="submit">Удалить товар</button>
+    </form>
+
+    <script>
+        // Форма добавления товара
+        document.getElementById('add-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('product-name').value;
+            const price = document.getElementById('product-price').value;
+            const description = document.getElementById('product-description').value;
+            const categories = document.getElementById('product-categories').value.split(',');
+
+            fetch('http://localhost:8080/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify([{ name, price, description, categories }])
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Товар добавлен успешно');
+                console.log(data);
+            })
+            .catch(err => alert('Ошибка добавления товара: ' + err));
+        });
+
+        // Форма редактирования товара
+        document.getElementById('edit-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const productId = document.getElementById('product-id').value;
+            const name = document.getElementById('edit-product-name').value;
+            const price = document.getElementById('edit-product-price').value;
+            const description = document.getElementById('edit-product-description').value;
+            const categories = document.getElementById('edit-product-categories').value.split(',');
+
+            const updatedProduct = {
+                name,
+                price,
+                description,
+                categories
+            };
+
+            fetch(`http://localhost:8080/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedProduct)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Товар отредактирован успешно');
+                console.log(data);
+            })
+            .catch(err => alert('Ошибка редактирования товара: ' + err));
+        });
+
+        // Форма удаления товара
+        document.getElementById('delete-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const productId = document.getElementById('delete-product-id').value;
+
+            fetch(`http://localhost:8080/products/${productId}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                alert('Товар удален успешно');
+            })
+            .catch(err => alert('Ошибка удаления товара: ' + err));
+        });
+    </script>
+
+</body>
+</html>

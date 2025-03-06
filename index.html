@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог товаров</title>
+    <style>
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 5px;
+            width: 200px;
+            display: inline-block;
+            vertical-align: top;
+            height: 450px;
+}
+
+        
+    </style>
+</head>
+<body>
+
+    <h1>Каталог товаров</h1>
+
+    <label for="category-select">Выберите категорию:</label>
+    <select id="category-select">
+        <option value="">Все категории</option>
+        <option value="Одежда и обувь">Одежда и обувь</option>
+        <option value="Для дома">Для дома</option>
+        <option value="Кухонные принадлежности">Кухонные принадлежности</option>
+        <option value="Для сада">Для сада</option>
+    </select>
+
+    <div id="products-container"></div>
+
+    <script>
+        // Функция для отображения товаров
+        function displayProducts(products) {
+            const productsContainer = document.getElementById('products-container');
+            productsContainer.innerHTML = ''; // Очищаем контейнер перед добавлением новых товаров
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>Цена: ${product.price} ₽</p>
+                    <p>${product.description}</p>
+                    <p>Категории: ${product.categories.join(', ')}</p>
+                `;
+                productsContainer.appendChild(productCard);
+            });
+        }
+
+        // Функция для загрузки товаров с бэкенда с учетом выбранной категории
+        function loadProducts(category = '') {
+            let url = 'http://localhost:3000/products';
+            if (category) {
+                url += `?category=${encodeURIComponent(category)}`;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(products => {
+                    displayProducts(products);
+                });
+        }
+
+        // Обработчик изменения категории
+        document.getElementById('category-select').addEventListener('change', (event) => {
+            const selectedCategory = event.target.value;
+            loadProducts(selectedCategory);
+        });
+
+        // Загрузка всех товаров при загрузке страницы
+        loadProducts();
+    </script>
+
+</body>
+</html>

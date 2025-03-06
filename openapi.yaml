@@ -1,0 +1,84 @@
+paths:
+  /products:
+    get:
+      summary: Получить все товары с возможностью фильтрации по категориям
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Фильтрация по категории
+      responses:
+        200:
+          description: Список товаров
+    post:
+      summary: Добавить один или несколько товаров
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  price:
+                    type: number
+                  description:
+                    type: string
+                  categories:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        201:
+          description: Товары успешно добавлены
+
+  /products/{id}:
+    put:
+      summary: Редактировать товар по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID товара
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                description:
+                  type: string
+                categories:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Товар обновлен
+        404:
+          description: Товар не найден
+    delete:
+      summary: Удалить товар по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID товара
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Товар успешно удален
+        404:
+          description: Товар не найденS
