@@ -19,3 +19,5 @@ http://localhost:8080 чтобы открыть панель админа
 http://localhost:3000 чтобы открыть каталов товаров
 ***
 http://localhost:3000/api-docs/ чтобы открыть swagger документацию
+***
+http://localhost:4000/graphql чтобы посмотреть GraphQL
