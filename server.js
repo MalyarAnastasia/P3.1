@@ -1,10 +1,39 @@
+const { ApolloServer, gql } = require('apollo-server-express');
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const WebSocket = require('ws');
 
 const app = express();
 const PORT = 3000;
+
+
+// Создаем WebSocket сервер
+const wss = new WebSocket.Server({ noServer: true });
+
+// Обработчик для новых подключений WebSocket
+wss.on('connection', (ws) => {
+    console.log('New WebSocket connection');
+
+    // Обработчик для получения сообщений от клиента
+    ws.on('message', (message) => {
+        console.log(`Received message: ${message}`);
+
+        // Отправляем сообщение всем подключенным клиентам
+        wss.clients.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+    });
+
+    // Отправляем приветственное сообщение новому клиенту
+    ws.send('Welcome to the chat!');
+});
+
+
 
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -30,6 +59,34 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+//реализация GrapfQL
+const typeDefs = gql`
+  type products {
+    id: Int
+    name: String
+    prise: Int
+    description: String
+    categories: String
+  }
+
+  type Query {
+    products(id: Int): [products]
+  }
+`;
+
+  const resolvers = {
+    Query: {
+        products: (parent, args) => {
+            const products = readProducts();
+            if (args.id) {
+                return products.filter(product => product.id === args.id);
+            }
+            return products;
+        },
+    },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 // Middleware для парсинга JSON
 app.use(bodyParser.json());
@@ -129,8 +186,14 @@ app.delete('/products/:id', (req, res) => {
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+  
 
 // Запуск сервера
-app.listen(PORT, () => {
+server.start().then(() => {
+    server.applyMiddleware({ app });
+    app.listen(PORT, () => {
     console.log("Server is running on http://localhost:", PORT);
+    console.log(`GraphQL server ready at http://localhost:${PORT}${server.graphqlPath}`);
+    });
 });
+

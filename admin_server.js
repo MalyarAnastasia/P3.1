@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const WebSocket = require('ws');
 
 const app = express();
 const PORT = 8080;
@@ -11,6 +12,31 @@ const swaggerUi = require('swagger-ui-express');
 
 const cors = require('cors');
 app.use(cors());
+
+
+// Создаем WebSocket сервер
+const wss = new WebSocket.Server({ noServer: true });
+
+// Обработчик для новых подключений WebSocket
+wss.on('connection', (ws) => {
+    console.log('New WebSocket connection');
+
+    // Обработчик для получения сообщений от клиента
+    ws.on('message', (message) => {
+        console.log(`Received message: ${message}`);
+
+        // Отправляем сообщение всем подключенным клиентам
+        wss.clients.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+    });
+
+    // Отправляем приветственное сообщение новому клиенту
+    ws.send('Welcome to the chat!');
+});
+
 
 
 // Swagger документация

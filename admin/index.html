@@ -116,3 +116,88 @@
 
 </body>
 </html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #chat { width: 300px; height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; margin-bottom: 10px; }
+        #input { width: 240px; }
+        #sendBtn { width: 50px; }
+        .message { margin-bottom: 5px; }
+        .message.admin { color: blue; }
+        .message.customer { color: green; }
+    </style>
+</head>
+<body>
+
+<h2>Admin Chat</h2>
+<div id="chat"></div>
+<input type="text" id="input" placeholder="Type a message...">
+<button id="sendBtn">Send</button>
+
+<script>
+    const chatBox = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+
+    const ws = new WebSocket('ws://localhost:3000');
+
+    ws.onopen = function() {
+        addMessage('Connected to the server as Admin', 'admin');
+    };
+
+    ws.onmessage = function(event) {
+        addMessage(`Customer: ${event.data}`, 'customer');
+    };
+
+    sendBtn.onclick = function() {
+        const message = input.value;
+        if (message) {
+            ws.send(message);
+            addMessage(`You: ${message}`, 'admin');
+            input.value = ''; // Очищаем поле ввода
+        }
+    };
+
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        messageElement.textContent = text;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Автоматическая прокрутка вниз
+    }
+</script>
+
+</body>
+</html>
+<script>
+    const ws = new WebSocket('ws://localhost:3000'); // Устанавливаем соединение с сервером WebSocket
+
+    ws.onopen = function() {
+        addMessage('Connected to customer chat', 'admin');
+    };
+
+    ws.onmessage = function(event) {
+        addMessage(`Customer: ${event.data}`, 'customer');
+    };
+
+    document.getElementById('sendBtn').onclick = function() {
+        const message = input.value;
+        if (message) {
+            ws.send(message);
+            addMessage(`You: ${message}`, 'admin');
+            input.value = ''; // Очищаем поле ввода
+        }
+    };
+
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        messageElement.textContent = text;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Автоматическая прокрутка вниз
+    }
+</script>
+
