@@ -1,14 +1,127 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ панель - Управление товарами</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ панель - Управление товарами</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #chat-box {
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      overflow-y: auto;
+      height: 70vh;
+    }
+
+    #message-input {
+      display: flex;
+    }
+
+    #message-input input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    #message-input button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Админ панель - Управление товарами</h1>
+<h1>Client-Admin Chat</h1>
+<div id="chat-box"></div>
 
+<div id="message-input">
+  <input type="text" id="message" placeholder="Type your message..." />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+  // WebSocket connection to server on port 8000
+  const socket = new WebSocket("ws://localhost:8000");
+
+  socket.onopen = function() {
+    console.log("Connected to WebSocket server");
+  };
+
+// Обработчик сообщения от клиента
+socket.onmessage = function(event) {
+  const chatBox = document.getElementById("chat-box");
+  const messageElement = document.createElement("p");
+
+  // Проверка, если получены бинарные данные Blob
+  if (event.data instanceof Blob) {
+    const reader = new FileReader();
+    reader.onload = function() {
+      const message = reader.result;  // Получаем текст из Blob
+      messageElement.textContent = "Client: " + message;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;  // Автоскроллинг вниз
+    };
+    reader.readAsText(event.data); // Преобразуем Blob в текст
+  } else {
+    // Если получены данные в текстовом формате
+    const message = event.data;
+    messageElement.textContent = "Client: " + message;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Автоскроллинг вниз
+  }
+};
+
+
+  socket.onclose = function() {
+    console.log("Disconnected from WebSocket server");
+  };
+
+  socket.onerror = function(error) {
+    console.error("WebSocket Error: ", error);
+  };
+
+  // Send a message from the client to the server (admin)
+  function sendMessage() {
+    const messageInput = document.getElementById("message");
+    const message = messageInput.value;
+
+    if (message.trim() !== "") {
+      socket.send(message);
+
+      // Display the sent message in the chat box
+    const chatBox = document.getElementById("chat-box");
+    const messageElement = document.createElement("p");
+    messageElement.textContent = "Admin: " + message;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the bottom
+
+
+      messageInput.value = "";  // Clear the input field
+    }
+  }
+</script>
+
+</body>
+</html>
+
+
+
+<body>
+    
     <!-- Форма для добавления товара -->
     <form id="add-product-form">
         <h2>Добавить товар</h2>
@@ -113,91 +226,3 @@
             .catch(err => alert('Ошибка удаления товара: ' + err));
         });
     </script>
-
-</body>
-</html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Chat</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #chat { width: 300px; height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; margin-bottom: 10px; }
-        #input { width: 240px; }
-        #sendBtn { width: 50px; }
-        .message { margin-bottom: 5px; }
-        .message.admin { color: blue; }
-        .message.customer { color: green; }
-    </style>
-</head>
-<body>
-
-<h2>Admin Chat</h2>
-<div id="chat"></div>
-<input type="text" id="input" placeholder="Type a message...">
-<button id="sendBtn">Send</button>
-
-<script>
-    const chatBox = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
-
-    const ws = new WebSocket('ws://localhost:3000');
-
-    ws.onopen = function() {
-        addMessage('Connected to the server as Admin', 'admin');
-    };
-
-    ws.onmessage = function(event) {
-        addMessage(`Customer: ${event.data}`, 'customer');
-    };
-
-    sendBtn.onclick = function() {
-        const message = input.value;
-        if (message) {
-            ws.send(message);
-            addMessage(`You: ${message}`, 'admin');
-            input.value = ''; // Очищаем поле ввода
-        }
-    };
-
-    function addMessage(text, sender) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-        messageElement.textContent = text;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight; // Автоматическая прокрутка вниз
-    }
-</script>
-
-</body>
-</html>
-<script>
-    const ws = new WebSocket('ws://localhost:3000'); // Устанавливаем соединение с сервером WebSocket
-
-    ws.onopen = function() {
-        addMessage('Connected to customer chat', 'admin');
-    };
-
-    ws.onmessage = function(event) {
-        addMessage(`Customer: ${event.data}`, 'customer');
-    };
-
-    document.getElementById('sendBtn').onclick = function() {
-        const message = input.value;
-        if (message) {
-            ws.send(message);
-            addMessage(`You: ${message}`, 'admin');
-            input.value = ''; // Очищаем поле ввода
-        }
-    };
-
-    function addMessage(text, sender) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-        messageElement.textContent = text;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight; // Автоматическая прокрутка вниз
-    }
-</script>
-

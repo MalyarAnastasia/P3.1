@@ -4,40 +4,49 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const WebSocket = require('ws');
+const connection = new WebSocket("ws://localhost:8000");
 
 const app = express();
 const PORT = 3000;
 
 
-// Создаем WebSocket сервер
-const wss = new WebSocket.Server({ noServer: true });
-
-// Обработчик для новых подключений WebSocket
-wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
-
-    // Обработчик для получения сообщений от клиента
-    ws.on('message', (message) => {
-        console.log(`Received message: ${message}`);
-
-        // Отправляем сообщение всем подключенным клиентам
-        wss.clients.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    });
-
-    // Отправляем приветственное сообщение новому клиенту
-    ws.send('Welcome to the chat!');
-});
-
-
-
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+// если соединение успешно установлено
+connection.onopen = (event) => {
+  console.log('WebSocket connection opened');
+  connection.send('Hello from client (server-side)');
+};
+
+// если возникла ошибка
+connection.onerror = (error) => {
+    console.error(`WebSocket Error: ${error}`);
+};
+
+// если соединение закрыто
+connection.onclose = (event) => {
+  console.log('WebSocket connection closed');
+};
+
+// получаем сообщение от WebSocket-сервера
+connection.onmessage = (event) => {
+    console.log(`Server says: ${event.data}`);
+
+  // Здесь больше не используется `document` или элементы DOM
+  // Можно просто логировать сообщения на сервере или обрабатывать их иначе
+  console.log(`Server says: ${event.data}`);
+};
+
+// Функция для отправки сообщения от клиента (например, админа) серверу
+function sendMessageToServer(message) {
+  if (message.trim() === '') {
+    console.log('Cannot send an empty message');
+  } else {
+    connection.send(message);
+    console.log(`Client says: ${message}`);
+  }
+}
 // Swagger документация
 const swaggerOptions = {
     swaggerDefinition: {

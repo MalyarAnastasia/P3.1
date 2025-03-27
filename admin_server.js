@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 
 const app = express();
 const PORT = 8080;
@@ -13,30 +13,43 @@ const swaggerUi = require('swagger-ui-express');
 const cors = require('cors');
 app.use(cors());
 
+const server = new WebSocket.Server({ port: 8000 });
 
-// Создаем WebSocket сервер
-const wss = new WebSocket.Server({ noServer: true });
+let clients = []; // Массив для хранения всех подключенных клиентов
 
-// Обработчик для новых подключений WebSocket
-wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
+server.on("connection", (client) => {
+  console.log("New connection established");
+  clients.push(client);  // Добавляем нового клиента в список
 
-    // Обработчик для получения сообщений от клиента
-    ws.on('message', (message) => {
-        console.log(`Received message: ${message}`);
+  // Обработчик входящих сообщений от клиента
+  client.on("message", (message) => {
+    console.log("Received message:", message.toString());
 
-        // Отправляем сообщение всем подключенным клиентам
-        wss.clients.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
+    // Отправляем полученное сообщение всем подключенным клиентам
+    clients.forEach((c) => {
+      if (c !== client) {
+        c.send(message); // Отправляем сообщение всем, кроме отправителя
+      }
     });
+  });
 
-    // Отправляем приветственное сообщение новому клиенту
-    ws.send('Welcome to the chat!');
+  // Обработчик закрытия соединения
+  client.on("close", () => {
+    console.log("Connection closed");
+    // Удаляем клиента из списка
+    clients = clients.filter((c) => c !== client);
+  });
+
+  // Обработчик ошибок
+  client.on("error", (err) => {
+    console.error("WebSocket Error: ", err);
+  });
 });
 
+console.log("WebSocket server running on port 8000");
+
+
+console.log("Сервер запущен на порту 8000");
 
 
 // Swagger документация
