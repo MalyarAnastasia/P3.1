@@ -1,0 +1,54 @@
+version: "3.9"
+services:
+  backend1:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - INSTANCE_ID=1
+    volumes:
+      - .:/app
+    networks:
+      - backend_net
+    mem_limit: 512m  
+
+  backend2:
+    build: .
+    ports:
+      - "3002:3000"
+    environment:
+      - INSTANCE_ID=2
+    volumes:
+      - .:/app
+    networks:
+      - backend_net
+    mem_limit: 512m  # ОПРЕДЕЛЕНО ТОЛЬКО ОДИН РАЗ
+
+  backend3:
+    build: .
+    ports:
+      - "3003:3000"
+    environment:
+      - INSTANCE_ID=3
+    volumes:
+      - .:/app
+    networks:
+      - backend_net
+    mem_limit: 512m  # ОПРЕДЕЛЕНО ТОЛЬКО ОДИН РАЗ
+
+  loadbalancer:
+    image: nginxproxy/nginx-proxy:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    networks:
+      - backend_net
+
+networks:
+  backend_net:
+    driver: bridge

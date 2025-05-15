@@ -59,6 +59,7 @@
   // При успешном подключении
   connection.onopen = () => {
     console.log('Connected to WebSocket server');
+    console.log('Instance ID:', process.env.INSTANCE_ID);
   };
 
 // Обработчик сообщения от сервера
